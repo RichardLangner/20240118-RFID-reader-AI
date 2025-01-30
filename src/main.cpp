@@ -11,6 +11,7 @@ SoftwareSerial rfidSerial(RX_PIN, TX_PIN);  // Create a SoftwareSerial instance
 // Declare the writeToFile function at the beginning to avoid compiler issues
 void writeToFile(const char* data);
 void clearFile(const char* path);  // Declare a function to clear the file
+String rfidData = "";
 
 void setup() {
     // Initialize Serial Monitor
@@ -34,8 +35,8 @@ void setup() {
     Serial.println("Place your RFID tag near the reader...");
 
     // Clear the stored file contents
-    // clearFile("/rfidData.txt");
-    writeToFile("200E6021F9828463");
+    clearFile("/rfidData.txt");
+    writeToFile("00E6021F982846");
    // Print the contents of the stored file for comparison
     Serial.println("Contents of the stored file:");
     File file = LittleFS.open("/rfidData.txt", "r");
@@ -47,49 +48,50 @@ void setup() {
     } else {
         Serial.println("Failed to open the file for reading.");
     }
-
     Serial.println();
 }
 
 void loop() {
     // Check for RFID data periodically
-    static unsigned long lastCheckTime = 0;
-    const unsigned long checkInterval = 1000;  // Check every 1 second
+    // static unsigned long lastCheckTime = 0;
+    // const unsigned long checkInterval = 1000;  // Check every 1 second
+    // if (millis() - lastCheckTime > checkInterval) {
+    //     lastCheckTime = millis();
+    //     Serial.println("Checking for RFID data...");
 
-    if (millis() - lastCheckTime > checkInterval) {
-        lastCheckTime = millis();
-        Serial.println("Checking for RFID data...");
-
-        // Check if data is available from the RFID reader
-        if (rfidSerial.available() > 0) {
-            Serial.println("Data available from RFID reader.");
-            String rfidData = "";
-            while (rfidSerial.available() > 0) {
-                char c = rfidSerial.read();
-                rfidData += c;
-            }
-
-            Serial.print("Raw RFID Data: ");
-            Serial.println(rfidData);
-
-            // Compare the raw data directly with the known tag UID
-            // String knownTag = rfidData;  // Use current RFID data as knownTag
-
-            // if (rfidData.equals(knownTag)) {
-                // Serial.println("Tag match found - Turning on LED");
-                // digitalWrite(BUILTIN_LED, LOW);  // Turn on the built-in LED (LOW for active low LED)
-            // } else {
-                // Serial.println("No match found");
-                // digitalWrite(BUILTIN_LED, HIGH);  // Turn off the built-in LED
-            // }
-
-            // Write data to a file
-            // writeToFile(rfidData.c_str());
-        } else {
-            Serial.println("No data available from RFID reader.");
-            digitalWrite(BUILTIN_LED, HIGH);  // Ensure the LED stays off when no data is available
+    // Check if data is available from the RFID reader
+    if (rfidSerial.available() > 0) {
+        Serial.println("Data available from RFID reader.");
+        while (rfidSerial.available() > 0) {
+            char c = rfidSerial.read();
+            rfidData += c;
+        }
+        if(rfidData.length()>15){
+        rfidData=rfidData.substring(1, rfidData.length()-2);
+        Serial.print("Raw RFID Data: ");
+        Serial.println(rfidData);
+        rfidData="";
         }
     }
+
+    //         // Compare the raw data directly with the known tag UID
+    //         // String knownTag = rfidData;  // Use current RFID data as knownTag
+
+    //         // if (rfidData.equals(knownTag)) {
+    //             // Serial.println("Tag match found - Turning on LED");
+    //             // digitalWrite(BUILTIN_LED, LOW);  // Turn on the built-in LED (LOW for active low LED)
+    //         // } else {
+    //             // Serial.println("No match found");
+    //             // digitalWrite(BUILTIN_LED, HIGH);  // Turn off the built-in LED
+    //         // }
+
+    //         // Write data to a file
+    //         // writeToFile(rfidData.c_str());
+    //     } else {
+    //         Serial.println("No data available from RFID reader.");
+    //         digitalWrite(BUILTIN_LED, HIGH);  // Ensure the LED stays off when no data is available
+    //     }
+    // }
 }
 
 // Function to clear the contents of a file
