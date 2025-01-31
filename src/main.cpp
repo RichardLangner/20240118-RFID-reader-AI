@@ -55,6 +55,7 @@ void createTestFile() {
 void setup() {
     // Start serial communication
     Serial.begin(74880);
+    flasher1.config(200,1000,500,1000);
 
     // Initialize SoftwareSerial
     rfidSerial.begin(9600);
