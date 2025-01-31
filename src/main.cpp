@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <LittleFS.h>
 #include <SoftwareSerial.h>  // Include the SoftwareSerial library
+#include "BlinkDigits.h"
 
 #define RX_PIN D2  // Change RX_PIN to D2
 #define TX_PIN D6  // Define TX_PIN for SoftwareSerial
@@ -12,8 +13,10 @@ enum RFIDState {
 };
 RFIDState rfidState = WAIT_FOR_STX; // Initial state
 String rfidData = "";
+int tagNumber = 0;    // Number is stored in the file
 
 SoftwareSerial rfidSerial(RX_PIN, TX_PIN);  // Create a SoftwareSerial instance
+BlinkDigits flasher1; 
 
 void printLittleFSContents() {
     Dir dir = LittleFS.openDir("/");
@@ -29,7 +32,6 @@ void printLittleFSContents() {
         Serial.print(" | Size: ");
         Serial.println(fileSize);
     }
-
     Serial.println("Finished listing files.");
 }
 
@@ -79,6 +81,9 @@ void setup() {
 }
 
 void loop() {
+    // Flash LED according to tag number
+    flasher1.blink(BUILTIN_LED, LOW, tagNumber);
+
     // Process one character at a time
     if (rfidSerial.available() > 0) {
         char c = rfidSerial.read();
@@ -114,6 +119,26 @@ void loop() {
             // Check if a file with the RFID data name exists in LittleFS
             if (LittleFS.exists(rfidData)) {
                 Serial.println("File exists in LittleFS.");
+                // Read contents of the file. This determines the number of LED flashes.
+                // Open the file for reading
+            File file = LittleFS.open(rfidData, "r");
+            if (!file) {
+                Serial.println("Failed to open file for reading.");
+            } else {
+                // Read the file contents (number as text)
+                String fileContent = file.readString();
+                file.close(); // Close the file
+
+                // Convert the file content to an integer
+                tagNumber = fileContent.toInt();
+
+                // Print the tag number
+                Serial.print("Tag Number: ");
+                Serial.println(tagNumber);
+
+                // Use the tagNumber for further processing (e.g., LED flashes)
+                // Example: flashLED(tagNumber);
+            }
             } else {
                 Serial.println("File does not exist in LittleFS.");
             }
