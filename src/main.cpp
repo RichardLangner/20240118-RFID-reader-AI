@@ -107,8 +107,19 @@ void loop() {
                 Serial.print("Raw RFID Data: ");
                 Serial.println(rfidData);
 
-                // Check if the data is 15 characters long
-                if (rfidData.length() == 15) {
+                // Print raw bytes for debugging
+                Serial.print("Raw Bytes: ");
+                for (int i = 0; i < rfidData.length(); i++) {
+                    Serial.print(rfidData[i], HEX);
+                    Serial.print(" ");
+                }
+                Serial.println();
+
+                // Trim non-printable characters (e.g., newline, carriage return)
+                rfidData.trim();
+
+                // Check if the data is 14 characters long
+                if (rfidData.length() == 14) {
                     Serial.print("Trimmed RFID Data: ");
                     Serial.println(rfidData);
 
@@ -120,6 +131,8 @@ void loop() {
                     }
                 } else {
                     Serial.println("Invalid RFID data length.");
+                    Serial.print("Length: ");
+                    Serial.println(rfidData.length());
                 }
 
                 // Reset the state machine
