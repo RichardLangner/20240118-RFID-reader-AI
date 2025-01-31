@@ -84,8 +84,7 @@ void loop() {
         char c = rfidSerial.read();
 
         switch (rfidState) {
-            case WAIT_FOR_STX:
-                // Wait for the STX character (0x02)
+            case WAIT_FOR_STX:  // Wait for the STX character (0x02)
                 if (c == 0x02) {
                     rfidState = READ_DATA; // Move to the next state
                     rfidData = "";        // Clear the buffer
@@ -93,52 +92,40 @@ void loop() {
                 }
                 break;
 
-            case READ_DATA:
-                // Read data until the ETX character (0x03)
+            case READ_DATA:  // Read data until the ETX character (0x03)
                 if (c == 0x03) {
                     rfidState = PROCESS_DATA; // Move to the next state
                 } else {
                     rfidData += c; // Append the character to the buffer
                 }
                 break;
-
-            case PROCESS_DATA:
-                // Process the complete RFID data
-                Serial.print("Raw RFID Data: ");
-                Serial.println(rfidData);
-
-                // Print raw bytes for debugging
-                Serial.print("Raw Bytes: ");
-                for (int i = 0; i < rfidData.length(); i++) {
-                    Serial.print(rfidData[i], HEX);
-                    Serial.print(" ");
-                }
-                Serial.println();
-
-                // Trim non-printable characters (e.g., newline, carriage return)
-                rfidData.trim();
-
-                // Check if the data is 14 characters long
-                if (rfidData.length() == 14) {
-                    Serial.print("Trimmed RFID Data: ");
-                    Serial.println(rfidData);
-
-                    // Check if a file with the RFID data name exists in LittleFS
-                    if (LittleFS.exists(rfidData)) {
-                        Serial.println("File exists in LittleFS.");
-                    } else {
-                        Serial.println("File does not exist in LittleFS.");
-                    }
-                } else {
-                    Serial.println("Invalid RFID data length.");
-                    Serial.print("Length: ");
-                    Serial.println(rfidData.length());
-                }
-
-                // Reset the state machine
-                rfidState = WAIT_FOR_STX;
-                break;
         }
+    }
+
+    // Handle PROCESS_DATA state outside the serial available check
+    if (rfidState == PROCESS_DATA) {    // Process the complete RFID data
+        rfidData.trim();    // Trim non-printable characters (e.g., newline, carriage return)
+        
+        // Check if the data is 14 characters long
+        if (rfidData.length() == 14) {
+            Serial.print("Trimmed RFID Data: ");
+            Serial.println(rfidData);
+
+            // Check if a file with the RFID data name exists in LittleFS
+            if (LittleFS.exists(rfidData)) {
+                Serial.println("File exists in LittleFS.");
+            } else {
+                Serial.println("File does not exist in LittleFS.");
+            }
+        } else {
+            Serial.println("Invalid RFID data length.");
+            Serial.print("Length: ");
+            Serial.println(rfidData.length());
+        }
+
+        // Reset the state machine
+        rfidState = WAIT_FOR_STX;
+        rfidData = ""; // Clear the buffer for the next read
     }
 
     // Add other non-blocking tasks here
